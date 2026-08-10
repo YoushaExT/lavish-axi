@@ -652,6 +652,35 @@ test("annotation hover and click resolve to the same Mermaid node element", () =
   assert.match(js, /anchor = annotationTargetEl\(target\)/);
 });
 
+test("right-click annotates interactive controls without touching the left-click gate", () => {
+  const js = createSdkJs("abc");
+
+  // The contextmenu gate deliberately omits isInteractiveControl: right-click is the only
+  // annotation path for native controls, whose left-click stays native so mocks remain usable.
+  assert.match(
+    js,
+    /"contextmenu",\s*\(event\) => \{\s*if \(!annotationMode \|\| isLavishUi\(event\.target\) \|\| isLavishAction\(event\.target\)\) return;/,
+  );
+  // The left-click gate keeps excluding interactive controls.
+  assert.match(
+    js,
+    /"click",\s*\(event\) => \{\s*if \(\s*!annotationMode \|\|\s*isLavishUi\(event\.target\) \|\|\s*isLavishAction\(event\.target\) \|\|\s*isInteractiveControl\(event\.target\)\s*\)/,
+  );
+});
+
+test("right-click annotation suppresses the native menu only when it opens the card", () => {
+  const js = createSdkJs("abc");
+
+  const handler = js.match(/"contextmenu",\s*\(event\) => \{([^]*?)\},\s*true,/)?.[1];
+  assert.ok(handler, "capture-phase contextmenu handler is registered");
+  // The annotation-mode/Lavish-UI gate returns before preventDefault, so outside annotation
+  // mode (and on Lavish's own UI) the browser context menu is never intercepted.
+  const gateIndex = handler.indexOf("return;");
+  const preventIndex = handler.indexOf("event.preventDefault()");
+  assert.ok(gateIndex !== -1 && preventIndex !== -1 && gateIndex < preventIndex, handler);
+  assert.match(handler, /showAnnotationCard\(event\.target\)/);
+});
+
 test("annotation mode forces the artifact cursor to default", () => {
   const js = createSdkJs("abc");
 

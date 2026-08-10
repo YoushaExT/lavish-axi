@@ -2626,6 +2626,21 @@ export function createArtifactSdk(
     true,
   );
 
+  // Right-click is the annotation path for native interactive controls: their left-click stays
+  // native so mocks remain usable, so this gate deliberately omits isInteractiveControl. The
+  // gate returns before preventDefault, so outside annotation mode (and on Lavish UI and
+  // data-lavish-action elements) the browser context menu is never intercepted.
+  document.addEventListener(
+    "contextmenu",
+    (event) => {
+      if (!annotationMode || isLavishUi(event.target) || isLavishAction(event.target)) return;
+      event.preventDefault();
+      event.stopPropagation();
+      showAnnotationCard(event.target);
+    },
+    true,
+  );
+
   setAnnotationMode(annotationMode);
   if (document.readyState === "loading") {
     document.addEventListener("DOMContentLoaded", startLayoutAudit, { once: true });
