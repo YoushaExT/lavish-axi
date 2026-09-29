@@ -821,6 +821,61 @@ test("a stale layout prompt rejects only itself and the rest of the batch is que
   }
 });
 
+test("a send-and-end batch stays open while a stale layout chip remains", async () => {
+  const dir = await mkdtemp(path.join(tmpdir(), "lavish-store-"));
+  try {
+    const stateFile = path.join(dir, "state.json");
+    const artifact = path.join(dir, "artifact.html");
+    await writeFile(artifact, "<h1>Hello</h1>");
+
+    const store = new SessionStore(stateFile);
+    const session = await store.upsertSession(artifact, "http://localhost:4387/session/test");
+    const firstLoad = await beginArtifactLoad(store, session.key);
+    const recorded = await store.recordLayoutDiagnostics(
+      session.key,
+      diagnosticPayload(firstLoad, 1, {
+        complete: true,
+        viewport_width: 1440,
+        findings: [{ selector: "p", kind: "clipped-text", axis: "vertical", overflowPx: 27, severity: "error" }],
+      }),
+    );
+    const prepared = await store.prepareLayoutWarningFixes(session.key, [recorded.warnings[0].id]);
+
+    const secondLoad = await beginArtifactLoad(store, session.key);
+    await store.recordLayoutDiagnostics(
+      session.key,
+      diagnosticPayload(secondLoad, 1, {
+        complete: true,
+        target_presence_complete: true,
+        viewport_width: 1440,
+        findings: [],
+      }),
+    );
+
+    const result = await store.queuePrompts(session.key, {
+      endSession: true,
+      prompts: [
+        { ...prepared.prompt, uid: "", selector: "", tag: "layout-warnings" },
+        { uid: "", prompt: "unrelated reviewer comment", selector: "", tag: "message", text: "Freeform message" },
+      ],
+    });
+    assert.equal(result.conflict, undefined);
+    assert.deepEqual(result.rejected_warning_ids, [recorded.warnings[0].id]);
+    assert.equal(result.status, "feedback");
+    assert.equal(result.ended_by, undefined);
+    assert.equal(result.prompts.length, 1);
+
+    const ended = await store.queuePrompts(session.key, {
+      endSession: true,
+      prompts: [{ uid: "", prompt: "all done", selector: "", tag: "message", text: "all done" }],
+    });
+    assert.equal(ended.status, "ended");
+    assert.equal(ended.ended_by, "user");
+  } finally {
+    await rm(dir, { recursive: true, force: true });
+  }
+});
+
 test("a stale diagnostic pass cannot mutate the current revision", async () => {
   const dir = await mkdtemp(path.join(tmpdir(), "lavish-store-"));
   try {

@@ -306,14 +306,18 @@ export class SessionStore {
     if (!restoring || (existingPrompts.length === 0 && !session.dom_snapshot)) {
       session.dom_snapshot = restoredSnapshot;
     }
+    // A send-and-end whose batch still holds stale layout chips does not end the
+    // session: the leftovers need a deliberate resolution first, the same veto a
+    // fully conflicting batch already had.
+    const ending = shouldEndSession && conflicts.size === 0;
     session.status =
-      shouldEndSession || alreadyEnded
+      ending || alreadyEnded
         ? "ended"
         : session.prompts.length > 0 ||
             (restoring && Array.isArray(session.artifact_failures) && session.artifact_failures.length > 0)
           ? "feedback"
           : "open";
-    if (shouldEndSession) session.ended_by = "user";
+    if (ending) session.ended_by = "user";
     session.updated_at = new Date().toISOString();
     await this.writeState(state);
     const result = { ...session, fresh_feedback: !restoring && acceptedPrompts.length > 0 };

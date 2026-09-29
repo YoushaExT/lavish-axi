@@ -1957,15 +1957,20 @@ async function submitQueuedOnce(submission, preserveFailureState = false) {
     persistQueuedPrompts();
     if (reconciledChat) syncChat(reconciledChat, acceptedRevision);
   }
-  if (rejectedPrompts.length && !shouldEndSession) {
+  if (rejectedPrompts.length) {
     showQueuedSendFailure(
-      "The layout issue selection changed, so the stale items stayed queued below. Remove them, or review the current issues and queue the fixes again. Everything else was sent.",
+      shouldEndSession
+        ? "The layout issue selection changed, so the stale items stayed queued below and the session was not ended. Remove them, or review the current issues and queue the fixes again. Everything else was sent."
+        : "The layout issue selection changed, so the stale items stayed queued below. Remove them, or review the current issues and queue the fixes again. Everything else was sent.",
       { kind: "submission", operation: { prompts: rejectedPrompts, order: submission.order } },
     );
+    if (submission.terminal) releaseTerminalSubmission(submission.terminal);
   }
   render();
   settleAcknowledgementGuidance(submission, preserveFailureState);
-  if (shouldEndSession) {
+  // The server leaves the session open while stale chips remain queued, so a
+  // send-and-end is honored only once the whole batch delivered.
+  if (shouldEndSession && rejectedPrompts.length === 0) {
     markSessionEnded();
     return;
   }
