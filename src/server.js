@@ -1131,6 +1131,9 @@ export async function serve({
       res.json({
         status: "queued",
         pending_prompts: publishedSession.pending_prompts,
+        ...(Array.isArray(session.rejected_warning_ids) && session.rejected_warning_ids.length > 0
+          ? { rejected_warning_ids: session.rejected_warning_ids, warnings: session.warnings }
+          : {}),
         ...serializeChatSync(publishedSession),
       });
       if (shouldEndSession) await shutdownIfNoLiveSessions();
