@@ -1,0 +1,111 @@
+$ lavish-axi --no-open
+session:
+  file: /Users/kunchen/.no-mistakes/worktrees/e41c0f926200/01M3QCWJGQRG9VXAEE8FAWR4MA/.reply-live-OowEOU/review.html
+  url: "http://mac-home.tailf05efa.ts.net:65348/session/b1d636f4eefa5694"
+  status: opened
+self_paint_warning: "This artifact never paints its own page surface: no background on html/body/:root, no bg-* class or data-theme on html/body, and no stylesheet that could set one. Lavish injects no design system, so text that assumes a dark or light host surface can render invisible. Set an explicit background and readable text."
+next_step: "First fix the unpainted page surface flagged in self_paint_warning and save - Lavish live-reloads the artifact automatically, so you do not need to re-run `lavish-axi /Users/kunchen/.no-mistakes/worktrees/e41c0f926200/01M3QCWJGQRG9VXAEE8FAWR4MA/.reply-live-OowEOU/review.html`. Do not respond to the user just yet. Now you must run `lavish-axi poll /Users/kunchen/.no-mistakes/worktrees/e41c0f926200/01M3QCWJGQRG9VXAEE8FAWR4MA/.reply-live-OowEOU/review.html`. This command long-polls until the user sends feedback, ends the session, or leaves every review window disconnected past the reconnect grace period, and it stays silent the whole time - that is normal, never kill it. Layout issues the browser detects do not return this poll; they wait in the user's Layout issues inbox until the user queues them, then arrive as an ordinary tag \"layout-warnings\" prompt. Do not pass --timeout-ms during normal agent use. Keep the poll in the foreground by default and let it return the feedback directly to the agent. A background poll is allowed only through a harness-native tracked background-job facility whose completion result is guaranteed to resume or notify the same agent. Never use `nohup`, shell `&`, `disown`, redirected fire-and-forget processes, or a detached terminal without an explicit verified callback merely to keep polling alive. If the harness has no completion-aware background facility, use the foreground poll or first wire a verified wake callback into the surrounding supervisor. Do not tell the user the artifact is being monitored until that wake path is live. If the poll gets killed or times out before feedback arrives, re-run it - feedback remains queued until delivery. Poll delivery consumes the response, so read it completely. If it returns browser_disconnected, the review window stayed disconnected past its reconnect grace period but the session remains resumable; ask the user whether to reopen or end it, and do neither uninvited. After applying feedback, run `lavish-axi poll /Users/kunchen/.no-mistakes/worktrees/e41c0f926200/01M3QCWJGQRG9VXAEE8FAWR4MA/.reply-live-OowEOU/review.html --agent-reply \"<message for the user>\"` without --timeout-ms to show a concise response in Lavish Editor and wait for more feedback. Keep the reply concise. Only when a longer reply is genuinely necessary, use Markdown structure - blank-line paragraphs, `- ` / `1. ` lists, `## ` headings - so it renders scannably instead of a wall of text, and pass that body with `--agent-reply-file <path>` (`-` reads stdin) so newlines survive quoting. The Conversation panel's Markdown subset is in `lavish-axi poll --help` and README. If the user ends the session, stop polling and do not reopen it by re-running `lavish-axi /Users/kunchen/.no-mistakes/worktrees/e41c0f926200/01M3QCWJGQRG9VXAEE8FAWR4MA/.reply-live-OowEOU/review.html` unless the user asks for further review or something genuinely important needs their visual attention - deliver routine updates directly in this conversation instead. When reopening is warranted, run `lavish-axi /Users/kunchen/.no-mistakes/worktrees/e41c0f926200/01M3QCWJGQRG9VXAEE8FAWR4MA/.reply-live-OowEOU/review.html --reopen`."
+$ lavish-axi poll --timeout-ms 1000
+session:
+  file: /Users/kunchen/.no-mistakes/worktrees/e41c0f926200/01M3QCWJGQRG9VXAEE8FAWR4MA/.reply-live-OowEOU/review.html
+  status: feedback
+prompts[1]{uid,prompt,selector,tag,text}:
+  "",Choose final heading,"",message,""
+next_step: "Apply the requested changes to /Users/kunchen/.no-mistakes/worktrees/e41c0f926200/01M3QCWJGQRG9VXAEE8FAWR4MA/.reply-live-OowEOU/review.html. Do not respond to the user just yet. Now you must run `lavish-axi poll /Users/kunchen/.no-mistakes/worktrees/e41c0f926200/01M3QCWJGQRG9VXAEE8FAWR4MA/.reply-live-OowEOU/review.html --agent-reply \"<message for the user>\"` without --timeout-ms unless the user ended the session. Keep the reply concise. Only when a longer reply is genuinely necessary, use Markdown structure - blank-line paragraphs, `- ` / `1. ` lists, `## ` headings - so it renders scannably instead of a wall of text, and pass that body with `--agent-reply-file <path>` (`-` reads stdin) so newlines survive quoting. The Conversation panel's Markdown subset is in `lavish-axi poll --help` and README. The poll waits silently until the user sends more feedback, ends the session, or leaves every review window disconnected past the reconnect grace period - never kill it. Keep the poll in the foreground by default and let it return the feedback directly to the agent. A background poll is allowed only through a harness-native tracked background-job facility whose completion result is guaranteed to resume or notify the same agent. Never use `nohup`, shell `&`, `disown`, redirected fire-and-forget processes, or a detached terminal without an explicit verified callback merely to keep polling alive. If the harness has no completion-aware background facility, use the foreground poll or first wire a verified wake callback into the surrounding supervisor. Do not tell the user the artifact is being monitored until that wake path is live. If the poll gets killed or times out before feedback arrives, re-run it - feedback remains queued until delivery. Poll delivery consumes the response, so read it completely. If it returns browser_disconnected, the review window stayed disconnected past its reconnect grace period but the session remains resumable; ask the user whether to reopen or end it, and do neither uninvited."
+dom_snapshot: ""
+$ chrome-devtools-axi open http://127.0.0.1:65348/session/b1d636f4eefa5694
+page:
+  title: Reply receipt review · Lavish
+  url: "http://127.0.0.1:65348/session/b1d636f4eefa5694"
+  refs: 24
+snapshot:
+uid=g1:1_0 RootWebArea "Reply receipt review · Lavish" url="http://127.0.0.1:65348/session/b1d636f4eefa5694"
+  uid=g1:1_1 StaticText "Lavish"
+  uid=g1:1_2 StaticText "EDITOR"
+  uid=g1:1_3 button "Annotate" description="Toggle annotate/explore mode (⌘I / Ctrl+I)" pressed
+  uid=g1:1_4 button "More" expandable haspopup="menu"
+  uid=g1:1_5 Iframe
+    uid=g1:1_6 RootWebArea "Reply receipt review" url="http://127.0.0.1:65348/artifact/b1d636f4eefa5694/index.html?artifact_revision=1&artifact_load_token=yNI_jAR8CCCpnTx5FtLmARZbkdlFwSFZ"
+      uid=g1:1_7 heading "Reply receipt review" level="1"
+      uid=g1:1_8 StaticText "Captain decision pending."
+  uid=g1:1_9 complementary
+    uid=g1:1_10 heading "Conversation" level="2"
+    uid=g1:1_11 StaticText "YOU"
+    uid=g1:1_12 StaticText "Choose final heading"
+    uid=g1:1_13 StaticText "Working..."
+    uid=g1:1_14 textbox "Write a message for the agent..." multiline
+    uid=g1:1_15 button "Attach images"
+    uid=g1:1_16 status atomic live="polite" relevant="additions text"
+    uid=g1:1_17 button "Send & End"
+    uid=g1:1_18 button "Send to Agent"
+  uid=g1:1_19 StaticText "Checking layout."
+  uid=g1:1_20 LineBreak "
+"
+  uid=g1:1_21 StaticText "One moment."
+  uid=g1:1_22 StaticText "Lavish is waiting for fonts and final geometry before revealing this artifact."
+  uid=g1:1_23 button "Show anyway"
+help[4]:
+  Run `chrome-devtools-axi fill @g1:1_14 "text"` to fill the "Write a message for the agent..." field
+  Run `chrome-devtools-axi click @g1:1_3` to click the "Annotate" button
+  Run `chrome-devtools-axi scroll down` to scroll down
+  Use `chrome-devtools-axi eval <expr>` for JS expressions. For multi-statement code, pass a function: `eval "() => { ...; return result }"`
+
+$ chrome-devtools-axi wait 1000
+waited: "1000"
+help[1]:
+  Run `chrome-devtools-axi snapshot` to see current page state
+
+$ chrome-devtools-axi screenshot /Users/kunchen/.no-mistakes/evidence/01M3QCWJGQRG9VXAEE8FAWR4MA/reply-working.png
+screenshot: /Users/kunchen/.no-mistakes/evidence/01M3QCWJGQRG9VXAEE8FAWR4MA/reply-working.png
+
+$ lavish-axi reply --agent-reply Decision: use the final heading.
+reply:
+  file: /Users/kunchen/.no-mistakes/worktrees/e41c0f926200/01M3QCWJGQRG9VXAEE8FAWR4MA/.reply-live-OowEOU/review.html
+  status: sent
+next_step: Lavish Editor accepted the reply for /Users/kunchen/.no-mistakes/worktrees/e41c0f926200/01M3QCWJGQRG9VXAEE8FAWR4MA/.reply-live-OowEOU/review.html and is no longer showing Working. Run `lavish-axi poll /Users/kunchen/.no-mistakes/worktrees/e41c0f926200/01M3QCWJGQRG9VXAEE8FAWR4MA/.reply-live-OowEOU/review.html` when you are ready to wait for more feedback.
+$ chrome-devtools-axi wait 1000
+waited: "1000"
+help[1]:
+  Run `chrome-devtools-axi snapshot` to see current page state
+
+$ chrome-devtools-axi screenshot /Users/kunchen/.no-mistakes/evidence/01M3QCWJGQRG9VXAEE8FAWR4MA/reply-accepted.png
+screenshot: /Users/kunchen/.no-mistakes/evidence/01M3QCWJGQRG9VXAEE8FAWR4MA/reply-accepted.png
+
+$ chrome-devtools-axi snapshot
+page:
+  title: Reply receipt review · Lavish
+  refs: 21
+snapshot:
+uid=g2:1_0 RootWebArea "Reply receipt review · Lavish" url="http://127.0.0.1:65348/session/b1d636f4eefa5694"
+  uid=g2:1_1 StaticText "Lavish"
+  uid=g2:1_2 StaticText "EDITOR"
+  uid=g2:1_3 button "Annotate" description="Toggle annotate/explore mode (⌘I / Ctrl+I)" pressed
+  uid=g2:1_4 button "More" expandable haspopup="menu"
+  uid=g2:1_5 Iframe
+    uid=g2:1_6 RootWebArea "Reply receipt review" url="http://127.0.0.1:65348/artifact/b1d636f4eefa5694/index.html?artifact_revision=1&artifact_load_token=yNI_jAR8CCCpnTx5FtLmARZbkdlFwSFZ"
+      uid=g2:1_7 heading "Reply receipt review" level="1"
+      uid=g2:1_8 StaticText "Captain decision pending."
+  uid=g2:1_9 complementary
+    uid=g2:1_10 heading "Conversation" level="2"
+    uid=g2:2_0 StaticText "YOU"
+    uid=g2:2_1 StaticText "Choose final heading"
+    uid=g2:2_2 StaticText "AGENT"
+    uid=g2:2_3 StaticText "Decision: use the final heading."
+    uid=g2:2_4 StaticText "Your agent is not listening. If this persists, ask your agent to poll for updates from Lavish."
+    uid=g2:1_14 textbox "Write a message for the agent..." multiline
+    uid=g2:1_15 button "Attach images"
+    uid=g2:1_16 status atomic live="polite" relevant="additions text"
+    uid=g2:1_17 button "Send & End"
+    uid=g2:1_18 button "Send to Agent"
+help[4]:
+  Run `chrome-devtools-axi fill @g2:1_14 "text"` to fill the "Write a message for the agent..." field
+  Run `chrome-devtools-axi click @g2:1_3` to click the "Annotate" button
+  Run `chrome-devtools-axi scroll down` to scroll down
+  Use `chrome-devtools-axi eval <expr>` for JS expressions. For multi-statement code, pass a function: `eval "() => { ...; return result }"`
+
+persisted page contains reply: true
+invalid reply rejected: 
+$ chrome-devtools-axi stop
+status: stopped
+
+2026-09-29T20:23:43.753Z [lavish] shutting down: close() called
