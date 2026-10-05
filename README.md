@@ -20,6 +20,14 @@
   /></a>
 </p>
 
+> [!NOTE]
+> **This is a fork of [kunchenguid/lavish-axi](https://github.com/kunchenguid/lavish-axi).** It is upstream plus two annotation changes on the `feat/right-click-annotate` branch, rebased onto upstream `main` to stay current. Everything below this note is upstream's README.
+>
+> - **Right-click annotates anything.** Upstream leaves buttons, inputs, selects and other controls clickable in annotation mode, so they can't be annotated. Here, right-clicking any element, controls included, opens the annotation card.
+> - **A right-click-only mode.** The annotate switch (and Cmd/Ctrl+I) cycles three modes instead of two: **Annotate** (upstream's annotation mode), **Right-click** (the artifact keeps its own left-click, hover and diagram pan/zoom, and only right-click opens the card, so an interactive mock stays usable while you review it), and **Explore** (no annotation).
+>
+> To use it, build from source: clone this repo, check out `feat/right-click-annotate`, then run `npx pnpm@11.1.1 install` and `npm link` to put this build's `lavish-axi` on your PATH.
+
 <h3 align="center">For when a rich editor is not rich enough.</h3>
 
 <p align="center">
