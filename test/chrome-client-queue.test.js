@@ -3957,8 +3957,8 @@ test("layout gate timeout fails open when no result arrives", async () => {
   assert.equal(chrome.element("body").classList.contains("layout-gate-active"), false);
 });
 
-test("layout gate re-arms on reload and still reveals on the next completed pass", async () => {
-  const { fetchImpl } = diagnosticsHarness([[], [warningPayload()]]);
+test("a live reload leaves an artifact already on screen uncovered and still reports its findings", async () => {
+  const { fetchImpl } = diagnosticsHarness([[warningPayload()]]);
   const chrome = await createChromeHarness({
     fetchImpl,
     sessionData: { key: "abc", file: "/tmp/artifact.html", layoutGateMaxHoldMs: 25 },
@@ -3968,8 +3968,8 @@ test("layout gate re-arms on reload and still reveals on the next completed pass
   assert.equal(chrome.element("layoutGateOverlay").hidden, true);
 
   chrome.eventSource().listeners.get("reload")();
-  assert.equal(chrome.element("layoutGateOverlay").hidden, false);
-  assert.equal(chrome.element("body").classList.contains("layout-gate-active"), true);
+  assert.equal(chrome.element("layoutGateOverlay").hidden, true);
+  assert.equal(chrome.element("body").classList.contains("layout-gate-active"), false);
 
   chrome.sendFrameMessage({
     type: "lavish:layoutDiagnostics",
@@ -3979,6 +3979,21 @@ test("layout gate re-arms on reload and still reveals on the next completed pass
   });
   await flushPromises();
 
+  assert.equal(chrome.element("layoutGateOverlay").hidden, true);
+  assert.equal(chrome.element("warningsWrap").hidden, false);
+});
+
+test("a reload while the layout gate still covers the first open keeps it covering", async () => {
+  const chrome = await createChromeHarness({
+    sessionData: { key: "abc", file: "/tmp/artifact.html", layoutGateMaxHoldMs: 25 },
+  });
+
+  assert.equal(chrome.element("layoutGateOverlay").hidden, false);
+  chrome.eventSource().listeners.get("reload")();
+  assert.equal(chrome.element("layoutGateOverlay").hidden, false);
+
+  chrome.sendFrameMessage({ type: "lavish:layoutDiagnostics", complete: true, viewport_width: 720, findings: [] });
+  await flushPromises();
   assert.equal(chrome.element("layoutGateOverlay").hidden, true);
 });
 
@@ -3997,7 +4012,6 @@ test("a stale prior-document diagnostic cannot reveal the new gate or clear its 
   });
 
   const oldToken = chrome.artifactLoadToken();
-  chrome.runTimers(25);
   chrome.eventSource().listeners.get("reload")();
   await flushPromises();
   chrome.sendFrameMessage({

@@ -21,10 +21,11 @@
 </p>
 
 > [!NOTE]
-> **This is a fork of [kunchenguid/lavish-axi](https://github.com/kunchenguid/lavish-axi).** It is upstream plus two annotation changes on the `feat/right-click-annotate` branch, rebased onto upstream `main` to stay current. Everything below this note is upstream's README.
+> **This is a fork of [kunchenguid/lavish-axi](https://github.com/kunchenguid/lavish-axi).** It is upstream plus three review-surface changes on the `feat/right-click-annotate` branch, rebased onto upstream `main` to stay current. Everything below this note is upstream's README.
 >
 > - **Right-click annotates anything.** Upstream leaves buttons, inputs, selects and other controls clickable in annotation mode, so they can't be annotated. Here, right-clicking any element, controls included, opens the annotation card.
 > - **A right-click-only mode.** The annotate switch (and Cmd/Ctrl+I) cycles three modes instead of two: **Annotate** (upstream's annotation mode), **Right-click** (the artifact keeps its own left-click, hover and diagram pan/zoom, and only right-click opens the card, so an interactive mock stays usable while you review it), and **Explore** (no annotation).
+> - **No "Checking layout" curtain on live reloads.** Upstream covers the artifact on every reload while it waits for fonts and layout. Here only the first open is covered; when the agent saves a change to an artifact already on screen, it reloads in place at the same scroll position. The layout check still runs and files any issues in the inbox.
 >
 > To use it, build from source: clone this repo, check out `feat/right-click-annotate`, then run `npx pnpm@11.1.1 install` and `npm link` to put this build's `lavish-axi` on your PATH.
 
@@ -176,6 +177,7 @@ pnpm link
 - **Open-time layout gate** - The browser chrome masks an artifact only while the real in-iframe audit waits for fonts and final geometry.
   The first completed client-side check reveals the artifact, whatever it found and even if reporting that check to the server fails; the gate never holds the review hostage waiting for a repair or a network round-trip.
   The user can click **Show anyway**, and a bounded safety timeout fails open from every gate state.
+  Once the artifact is on screen, live reloads leave it uncovered: the gate rises again only while it is still up from the first open, or while a sticky failure card needs to stay in view.
   If the review cannot load at all - the chrome's own script never runs, or the server does not answer the artifact's load request after several retries - the mask names the problem and offers **Check and reload** without removing the independent **Show anyway** escape.
   A review already loaded in another browser tab is named the same way, with a **Take over here** button that moves it into the current tab, because Lavish loads an artifact in one tab at a time.
 - **Layout issues inbox** - Detection is passive. After fonts and finite animations settle, the injected SDK confirms severe failures from direct rendered evidence such as materially escaped meaningful content or required controls, clipped text fragments, viewport reachability, or near-total semantic occlusion.

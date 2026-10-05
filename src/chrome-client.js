@@ -3319,6 +3319,7 @@ async function replaceArtifactFrame({ recoveryRetry = false } = {}) {
   cancelArtifactLoadRecovery();
   if (!recoveryRetry) artifactLoadRecoveryAttempt = 0;
   clearTimeout(artifactSilenceTimer);
+  const artifactAlreadyShown = !layoutGateVisible && !layoutGateFailureSticky;
   // The iframe is sandboxed, so reload by resetting the iframe URL from chrome.
   if (!artifactSrc) {
     // The next document reports its own registry once it loads; until then the
@@ -3326,7 +3327,7 @@ async function replaceArtifactFrame({ recoveryRetry = false } = {}) {
     // Only clear it here, right before the frame is actually replaced - a preserved
     // load (superseded/out-of-order/exhausted retries below) must leave it intact.
     resetRevisionLegend();
-    startLayoutGateCycle();
+    if (!artifactAlreadyShown) startLayoutGateCycle();
     const currentSrc = frame.src || "about:blank";
     frame.src = currentSrc + (currentSrc.includes("?") ? "&" : "?") + "lavish_reload=" + Date.now();
     return true;
@@ -3441,7 +3442,7 @@ async function replaceArtifactFrame({ recoveryRetry = false } = {}) {
   artifactSpokeToken = "";
   inlineWhiteboardChannels.clear();
   setHandoffSuperseded(false);
-  startLayoutGateCycle();
+  if (!artifactAlreadyShown) startLayoutGateCycle();
   // The next document reports its own registry once it loads; until then the
   // previous revision's legend would point at blocks that may no longer exist.
   resetRevisionLegend();
