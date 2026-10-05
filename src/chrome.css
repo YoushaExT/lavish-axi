@@ -216,6 +216,13 @@ body.lavish {
   left: 16px;
   background: var(--accent-ink);
 }
+.annotate-switch[aria-pressed="mixed"] .switch-track {
+  background: color-mix(in srgb, var(--accent) 45%, var(--border));
+}
+.annotate-switch[aria-pressed="mixed"] .switch-knob {
+  left: 9px;
+  background: var(--accent-ink);
+}
 .visually-hidden {
   position: absolute;
   width: 1px;

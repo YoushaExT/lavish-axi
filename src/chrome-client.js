@@ -122,6 +122,7 @@ const panelScrim = /** @type {HTMLDivElement} */ (document.getElementById("panel
 const sendButton = /** @type {HTMLButtonElement} */ (document.getElementById("send"));
 const sendAndEndButton = /** @type {HTMLButtonElement} */ (document.getElementById("sendAndEnd"));
 const annotationSwitch = /** @type {HTMLButtonElement} */ (document.getElementById("annotation"));
+const annotationLabel = /** @type {HTMLSpanElement} */ (document.getElementById("annotationLabel"));
 const moreWrap = /** @type {HTMLDivElement} */ (document.getElementById("moreWrap"));
 const moreButton = /** @type {HTMLButtonElement} */ (document.getElementById("moreButton"));
 const moreMenu = /** @type {HTMLDivElement} */ (document.getElementById("moreMenu"));
@@ -192,7 +193,10 @@ const whiteboardError = /** @type {HTMLDivElement} */ (document.getElementById("
 const artifactSrc = frame.dataset.artifactSrc || frame.getAttribute?.("data-artifact-src") || frame.src || "";
 
 const queued = loadQueuedPrompts();
-let annotation = true;
+const ANNOTATION_MODES = ["on", "right-click", "off"];
+const ANNOTATION_MODE_LABELS = { on: "Annotate", "right-click": "Right-click", off: "Explore" };
+const ANNOTATION_MODE_PRESSED = { on: "true", "right-click": "mixed", off: "false" };
+let annotationMode = "on";
 let ended = false;
 let agentPresence = "waiting";
 const layoutGateEnabled = sessionData.layoutGateEnabled !== false;
@@ -3023,7 +3027,7 @@ function markSessionEnded() {
   layoutGateFailureSticky = false;
   revealLayoutGate();
   layoutGateEscape?.end?.();
-  postToFrame({ type: "lavish:setAnnotationMode", enabled: false });
+  postToFrame({ type: "lavish:setAnnotationMode", enabled: false, mode: "off" });
   endedOverlay.hidden = false;
 }
 
@@ -4310,9 +4314,15 @@ loadFrame();
 
 function toggleAnnotationMode() {
   if (ended || terminalSubmission) return;
-  annotation = !annotation;
-  annotationSwitch.setAttribute("aria-pressed", String(annotation));
-  postToFrame({ type: "lavish:setAnnotationMode", enabled: annotation });
+  annotationMode = ANNOTATION_MODES[(ANNOTATION_MODES.indexOf(annotationMode) + 1) % ANNOTATION_MODES.length];
+  annotationSwitch.setAttribute("aria-pressed", ANNOTATION_MODE_PRESSED[annotationMode]);
+  annotationLabel.textContent = ANNOTATION_MODE_LABELS[annotationMode];
+  postAnnotationMode();
+}
+
+function postAnnotationMode() {
+  const mode = ended ? "off" : annotationMode;
+  postToFrame({ type: "lavish:setAnnotationMode", enabled: mode !== "off", mode });
 }
 
 annotationSwitch.onclick = toggleAnnotationMode;
@@ -4503,7 +4513,7 @@ document.addEventListener(
 );
 frame.addEventListener("load", () => {
   if (artifactSpokeToken !== artifactLoadToken) armArtifactAvailabilityProbe(artifactLoadToken);
-  postToFrame({ type: "lavish:setAnnotationMode", enabled: annotation && !ended });
+  postAnnotationMode();
   // Replay the pre-reload scroll position so hot reloads don't jump the artifact to the top.
   postToFrame({ type: "lavish:restoreScroll", x: lastScroll.x, y: lastScroll.y });
   if (lastReviewState) postToFrame({ type: "lavish:restoreReviewState", state: lastReviewState });

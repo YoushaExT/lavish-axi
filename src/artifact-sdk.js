@@ -473,6 +473,7 @@ export function createArtifactSdk(
     parent.postMessage({ type, ...payload, artifact_load_token: String(artifactLoadToken || "") }, "*");
   }
   let annotationMode = true;
+  let rightClickAnnotation = true;
   let hovered = null;
   let selected = null;
   let ignoreNextClick = false;
@@ -1194,8 +1195,9 @@ export function createArtifactSdk(
     }
   }
 
-  function setAnnotationMode(enabled) {
-    annotationMode = !!enabled;
+  function setAnnotationMode(mode) {
+    annotationMode = mode === "on";
+    rightClickAnnotation = mode === "on" || mode === "right-click";
     let style = document.getElementById("lavish-cursor-style");
     if (annotationMode && !style) {
       style = document.createElement("style");
@@ -1205,7 +1207,7 @@ export function createArtifactSdk(
       document.head.appendChild(style);
     }
     if (!annotationMode && style) style.remove();
-    if (!annotationMode) closeCard();
+    if (!rightClickAnnotation) closeCard();
 
     // Freeze Mermaid pan/zoom while annotating so nodes sit at stable screen
     // positions and a click resolves cleanly to one node instead of panning.
@@ -2472,7 +2474,7 @@ export function createArtifactSdk(
     // without the source check the artifact could post to itself and drive the SDK.
     if (event.source !== parent) return;
     const msg = event.data || {};
-    if (msg.type === "lavish:setAnnotationMode") setAnnotationMode(msg.enabled);
+    if (msg.type === "lavish:setAnnotationMode") setAnnotationMode(msg.mode || (msg.enabled ? "on" : "off"));
     if (msg.type === "lavish:attachmentResult") {
       if (!isTrustedAttachmentResult(event, { parentWindow: parent, nonce: ATTACHMENT_NONCE })) return;
       activeAttachments?.handleResult(msg.localId, msg.ok, msg.id, msg.error);
@@ -2491,7 +2493,7 @@ export function createArtifactSdk(
     if (msg.type === "lavish:queuedAnchors") {
       queuedAnchorSelectors = new Set(Array.isArray(msg.selectors) ? msg.selectors.map(String) : []);
     }
-    if (msg.type === "lavish:annotateElement" && annotationMode) {
+    if (msg.type === "lavish:annotateElement" && rightClickAnnotation) {
       const target = safeQuerySelector(msg.selector);
       if (target) showAnnotationCard(target);
     }
@@ -2611,37 +2613,48 @@ export function createArtifactSdk(
         ignoreNextClick = false;
         return;
       }
-      // The clicked element's own selector, plus its diagram node's, so any click inside a node
-      // finds the node's note again. A table cell's note stays on the exact element clicked.
-      const clicked = queuedAnchorSelectors.size ? context(event.target) : null;
-      const node = clicked?.target?.type === "mermaid-node" ? clicked.target.selector : "";
-      const selector = [clicked?.selector, node].find((candidate) => candidate && queuedAnchorSelectors.has(candidate));
-      if (selector) {
-        closeCard();
-        postArtifactMessage("lavish:editQueuedAnchor", { selector });
-        return;
-      }
-      showAnnotationCard(event.target);
+      annotateAt(event.target);
     },
     true,
   );
 
-  // Right-click is the annotation path for native interactive controls: their left-click stays
-  // native so mocks remain usable, so this gate deliberately omits isInteractiveControl. The
-  // gate returns before preventDefault, so outside annotation mode (and on Lavish UI and
-  // data-lavish-action elements) the browser context menu is never intercepted.
+  function annotateAt(element) {
+    // The element's own selector, plus its diagram node's, so annotating anywhere inside a node
+    // finds the node's note again. A table cell's note stays on the exact element annotated.
+    const clicked = queuedAnchorSelectors.size ? context(element) : null;
+    const node = clicked?.target?.type === "mermaid-node" ? clicked.target.selector : "";
+    const selector = [clicked?.selector, node].find((candidate) => candidate && queuedAnchorSelectors.has(candidate));
+    if (selector) {
+      closeCard();
+      postArtifactMessage("lavish:editQueuedAnchor", { selector });
+      return;
+    }
+    showAnnotationCard(element);
+  }
+
+  // Right-click is the annotation path for native interactive controls, whose left-click stays
+  // native so mocks remain usable, and the only path at all in right-click mode. So this gate
+  // deliberately omits isInteractiveControl. It returns before preventDefault, so in explore
+  // mode (and on Lavish UI and data-lavish-action elements) the browser context menu is never
+  // intercepted. Right-clicking selected text annotates the selection, since in right-click
+  // mode selecting text no longer opens a card by itself.
   document.addEventListener(
     "contextmenu",
     (event) => {
-      if (!annotationMode || isLavishUi(event.target) || isLavishAction(event.target)) return;
+      if (!rightClickAnnotation || isLavishUi(event.target) || isLavishAction(event.target)) return;
       event.preventDefault();
       event.stopPropagation();
-      showAnnotationCard(event.target);
+      const selection = textSelectionContext(document.getSelection());
+      if (selection && selection.range.intersectsNode(event.target)) {
+        showAnnotationCard(selection.element, { context: selection, range: selection.range });
+        return;
+      }
+      annotateAt(event.target);
     },
     true,
   );
 
-  setAnnotationMode(annotationMode);
+  setAnnotationMode("on");
   if (document.readyState === "loading") {
     document.addEventListener("DOMContentLoaded", startLayoutAudit, { once: true });
   } else {

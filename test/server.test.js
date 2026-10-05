@@ -659,7 +659,7 @@ test("right-click annotates interactive controls without touching the left-click
   // annotation path for native controls, whose left-click stays native so mocks remain usable.
   assert.match(
     js,
-    /"contextmenu",\s*\(event\) => \{\s*if \(!annotationMode \|\| isLavishUi\(event\.target\) \|\| isLavishAction\(event\.target\)\) return;/,
+    /"contextmenu",\s*\(event\) => \{\s*if \(!rightClickAnnotation \|\| isLavishUi\(event\.target\) \|\| isLavishAction\(event\.target\)\) return;/,
   );
   // The left-click gate keeps excluding interactive controls.
   assert.match(
@@ -678,7 +678,33 @@ test("right-click annotation suppresses the native menu only when it opens the c
   const gateIndex = handler.indexOf("return;");
   const preventIndex = handler.indexOf("event.preventDefault()");
   assert.ok(gateIndex !== -1 && preventIndex !== -1 && gateIndex < preventIndex, handler);
-  assert.match(handler, /showAnnotationCard\(event\.target\)/);
+  assert.match(handler, /annotateAt\(event\.target\)/);
+});
+
+test("right-click mode keeps left-click native and leaves right-click annotating", () => {
+  const js = createSdkJs("abc");
+
+  assert.match(js, /annotationMode = mode === "on";/);
+  assert.match(js, /rightClickAnnotation = mode === "on" \|\| mode === "right-click";/);
+  assert.match(js, /setAnnotationMode\(msg\.mode \|\| \(msg\.enabled \? "on" : "off"\)\)/);
+  assert.match(js, /msg\.type === "lavish:annotateElement" && rightClickAnnotation/);
+});
+
+test("right-click on selected text annotates the selection, elsewhere the clicked element", () => {
+  const js = createSdkJs("abc");
+
+  const handler = js.match(/"contextmenu",\s*\(event\) => \{([^]*?)\},\s*true,/)?.[1];
+  assert.ok(handler, "capture-phase contextmenu handler is registered");
+  assert.match(handler, /selection\.range\.intersectsNode\(event\.target\)/);
+  assert.match(handler, /showAnnotationCard\(selection\.element, \{ context: selection, range: selection\.range \}\)/);
+});
+
+test("right-click on an element with a queued note reopens that note", () => {
+  const js = createSdkJs("abc");
+
+  const annotateAt = js.slice(js.indexOf("function annotateAt("), js.indexOf('"contextmenu"'));
+  assert.match(annotateAt, /postArtifactMessage\("lavish:editQueuedAnchor", \{ selector \}\)/);
+  assert.match(annotateAt, /showAnnotationCard\(element\)/);
 });
 
 test("annotation mode forces the artifact cursor to default", () => {
@@ -686,7 +712,7 @@ test("annotation mode forces the artifact cursor to default", () => {
 
   assert.match(js, /lavish-cursor-style/);
   assert.match(js, /cursor:default!important/);
-  assert.match(js, /setAnnotationMode\(enabled\)/);
+  assert.match(js, /setAnnotationMode\(mode\)/);
 });
 
 test("artifact SDK registers a capture-phase document keydown listener for the mode toggle hotkey", () => {
@@ -727,7 +753,10 @@ test("the annotate switch exposes the mode toggle hotkey as a discoverable toolt
   const html = createChromeHtml({ key: "abc", file: "/tmp/artifact.html" });
 
   assert.match(html, /"modeToggleHotkeyKey":"i"/);
-  assert.match(html, /id="annotation"[^>]*title="Toggle annotate\/explore mode \(⌘I \/ Ctrl\+I\)"/);
+  assert.match(
+    html,
+    /id="annotation"[^>]*title="Cycle annotate \/ right-click only \/ explore mode \(⌘I \/ Ctrl\+I\)"/,
+  );
 });
 
 test("artifact SDK lets marked feedback controls handle their own clicks", () => {
@@ -779,7 +808,7 @@ test("artifact SDK shows native cursors on form controls in annotation mode", ()
 test("turning annotation mode off clears selection and floating card", () => {
   const js = createSdkJs("abc");
 
-  assert.match(js, /if \(!annotationMode\) closeCard\(\)/);
+  assert.match(js, /if \(!rightClickAnnotation\) closeCard\(\)/);
 });
 
 test("annotation card title renders selected tag as an html element name", () => {
@@ -814,7 +843,14 @@ test("annotate switch shows a brass track and ink knob when enabled", async () =
 
   assert.match(css, /\.annotate-switch\[aria-pressed="true"\] \.switch-track\{background:var\(--accent\)/);
   assert.match(css, /\.annotate-switch\[aria-pressed="true"\] \.switch-knob\{[^}]*background:var\(--accent-ink\)/);
-  assert.match(js, /annotationSwitch\.setAttribute\("aria-pressed", String\(annotation\)\)/);
+  assert.match(js, /annotationSwitch\.setAttribute\("aria-pressed", ANNOTATION_MODE_PRESSED\[annotationMode\]\)/);
+});
+
+test("annotate switch shows a half-filled track with a centred knob in right-click mode", async () => {
+  const css = await chromeCssSource();
+
+  assert.match(css, /\.annotate-switch\[aria-pressed="mixed"\] \.switch-track\{background:color-mix\(/);
+  assert.match(css, /\.annotate-switch\[aria-pressed="mixed"\] \.switch-knob\{left:9px;/);
 });
 
 test("chrome declares the Lavish design-system tokens", async () => {

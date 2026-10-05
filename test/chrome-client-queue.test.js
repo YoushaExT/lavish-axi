@@ -5888,20 +5888,29 @@ test("a queued Send refused because the session already ended marks the chrome r
   assert.equal(chrome.queued().length, 1);
 });
 
-test("Cmd/Ctrl+I toggles annotation mode from the chrome document, regardless of focus", async () => {
+test("Cmd/Ctrl+I cycles annotate, right-click only and explore modes, regardless of focus", async () => {
   const chrome = await createChromeHarness();
 
   const metaEvent = chrome.dispatchDocumentKeydown({ key: "i", metaKey: true });
   assert.equal(metaEvent.defaultPrevented, true);
-  assert.equal(chrome.element("annotation")["aria-pressed"], "false");
+  assert.equal(chrome.element("annotation")["aria-pressed"], "mixed");
+  assert.equal(chrome.element("annotationLabel").textContent, "Right-click");
   assert.equal(chrome.postedToFrame.at(-1).type, "lavish:setAnnotationMode");
-  assert.equal(chrome.postedToFrame.at(-1).enabled, false);
+  assert.equal(chrome.postedToFrame.at(-1).enabled, true);
+  assert.equal(chrome.postedToFrame.at(-1).mode, "right-click");
 
   const ctrlEvent = chrome.dispatchDocumentKeydown({ key: "I", ctrlKey: true });
   assert.equal(ctrlEvent.defaultPrevented, true);
+  assert.equal(chrome.element("annotation")["aria-pressed"], "false");
+  assert.equal(chrome.element("annotationLabel").textContent, "Explore");
+  assert.equal(chrome.postedToFrame.at(-1).enabled, false);
+  assert.equal(chrome.postedToFrame.at(-1).mode, "off");
+
+  chrome.dispatchDocumentKeydown({ key: "i", metaKey: true });
   assert.equal(chrome.element("annotation")["aria-pressed"], "true");
-  assert.equal(chrome.postedToFrame.at(-1).type, "lavish:setAnnotationMode");
+  assert.equal(chrome.element("annotationLabel").textContent, "Annotate");
   assert.equal(chrome.postedToFrame.at(-1).enabled, true);
+  assert.equal(chrome.postedToFrame.at(-1).mode, "on");
 });
 
 test("plain 'i' and other modifier combos do not toggle annotation mode", async () => {
@@ -5939,23 +5948,27 @@ test("chrome client reads the mode toggle hotkey from the session bootstrap", as
 
   const bootstrapHotkeyEvent = chrome.dispatchDocumentKeydown({ key: "K", metaKey: true });
   assert.equal(bootstrapHotkeyEvent.defaultPrevented, true);
-  assert.equal(chrome.element("annotation")["aria-pressed"], "false");
+  assert.equal(chrome.element("annotation")["aria-pressed"], "mixed");
   assert.equal(chrome.postedToFrame.at(-1).type, "lavish:setAnnotationMode");
-  assert.equal(chrome.postedToFrame.at(-1).enabled, false);
+  assert.equal(chrome.postedToFrame.at(-1).mode, "right-click");
 });
 
-test("chrome client toggles annotation mode when the artifact SDK requests it via postMessage", async () => {
+test("chrome client cycles annotation mode when the artifact SDK requests it via postMessage", async () => {
   const chrome = await createChromeHarness();
 
   chrome.sendFrameMessage({ type: "lavish:toggleAnnotationMode" });
-
-  assert.equal(chrome.element("annotation")["aria-pressed"], "false");
+  assert.equal(chrome.element("annotation")["aria-pressed"], "mixed");
   assert.equal(chrome.postedToFrame.at(-1).type, "lavish:setAnnotationMode");
+  assert.equal(chrome.postedToFrame.at(-1).mode, "right-click");
+
+  chrome.sendFrameMessage({ type: "lavish:toggleAnnotationMode" });
+  assert.equal(chrome.element("annotation")["aria-pressed"], "false");
+  assert.equal(chrome.postedToFrame.at(-1).mode, "off");
   assert.equal(chrome.postedToFrame.at(-1).enabled, false);
 
   chrome.sendFrameMessage({ type: "lavish:toggleAnnotationMode" });
   assert.equal(chrome.element("annotation")["aria-pressed"], "true");
-  assert.equal(chrome.postedToFrame.at(-1).type, "lavish:setAnnotationMode");
+  assert.equal(chrome.postedToFrame.at(-1).mode, "on");
   assert.equal(chrome.postedToFrame.at(-1).enabled, true);
 });
 
@@ -5963,17 +5976,30 @@ test("chrome client ignores annotation mode toggles after the session ends", asy
   const chrome = await createChromeHarness();
 
   chrome.dispatchDocumentKeydown({ key: "i", metaKey: true });
-  assert.equal(chrome.element("annotation")["aria-pressed"], "false");
+  assert.equal(chrome.element("annotation")["aria-pressed"], "mixed");
 
   chrome.sendFrameMessage({ type: "lavish:endSession" });
   await flushPromises();
+  assert.equal(chrome.postedToFrame.at(-1)?.mode, "off");
   const afterEndPostCount = chrome.postedToFrame.length;
 
   chrome.dispatchDocumentKeydown({ key: "i", metaKey: true });
   chrome.sendFrameMessage({ type: "lavish:toggleAnnotationMode" });
 
-  assert.equal(chrome.element("annotation")["aria-pressed"], "false");
+  assert.equal(chrome.element("annotation")["aria-pressed"], "mixed");
   assert.equal(chrome.postedToFrame.length, afterEndPostCount);
+});
+
+test("a reloaded artifact frame comes back in the chosen right-click mode", async () => {
+  const chrome = await createChromeHarness();
+
+  chrome.dispatchDocumentKeydown({ key: "i", metaKey: true });
+  const beforeReload = chrome.postedToFrame.length;
+  chrome.frame.dispatch("load");
+
+  assert.ok(chrome.postedToFrame.length > beforeReload, "the reload posts the current mode again");
+  const modeMessages = chrome.postedToFrame.filter((message) => message.type === "lavish:setAnnotationMode");
+  assert.equal(modeMessages.at(-1).mode, "right-click");
 });
 
 function whiteboardFetch(url) {
